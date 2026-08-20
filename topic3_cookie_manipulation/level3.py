@@ -6,22 +6,22 @@ import html
 
 FLAG = "FLAG{s3ss10n_h1j4ck_m4st3r}"
 
-
 SERVER_SESSIONS = {
     "1049": {"user": "sys_admin", "role": "admin", "flag": FLAG}
 }
 NEXT_SESSION_ID = 1050
 
-
+USERS = {
     "guest": {"password": "guest123", "role": "guest"},
-    "admin": {"password": "admin_secret_2024", "role": "admin"}  
+    "admin": {"password": "admin_secret_2024", "role": "admin"}
+}
 
 class CTFHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         global NEXT_SESSION_ID
         parsed_path = urllib.parse.urlparse(self.path)
         
-    
+        # --- LOGOUT ---
         if parsed_path.path == '/logout':
             self.send_response(302)
             self.send_header('Set-Cookie', 'session_id=; Path=/; Max-Age=0')
@@ -29,7 +29,6 @@ class CTFHandler(BaseHTTPRequestHandler):
             self.end_headers()
             return
         
-       
         if parsed_path.path == '/login' or parsed_path.path == '/':
             cookie_header = self.headers.get('Cookie', '')
             cookie = SimpleCookie()
@@ -49,7 +48,6 @@ class CTFHandler(BaseHTTPRequestHandler):
             self.wfile.write(LOGIN_HTML.encode())
             return
         
-        # --- DASHBOARD (Butuh Session) ---
         if parsed_path.path == '/dashboard':
             cookie_header = self.headers.get('Cookie', '')
             cookie = SimpleCookie()
@@ -79,7 +77,6 @@ class CTFHandler(BaseHTTPRequestHandler):
             self.wfile.write(dashboard_html.encode())
             return
         
-        # --- ADMIN PANEL (Butuh Admin Session) ---
         if parsed_path.path == '/admin':
             cookie_header = self.headers.get('Cookie', '')
             cookie = SimpleCookie()
@@ -108,7 +105,6 @@ class CTFHandler(BaseHTTPRequestHandler):
                 self.wfile.write(ACCESS_DENIED_HTML.encode())
                 return
             
-            # Admin access granted!
             self.send_response(200)
             self.send_header('Content-type', 'text/html')
             self.end_headers()
@@ -126,14 +122,11 @@ class CTFHandler(BaseHTTPRequestHandler):
             content_length = int(self.headers['Content-Length'])
             post_data = self.rfile.read(content_length)
             
-            # Parse form data
             form_data = urllib.parse.parse_qs(post_data.decode('utf-8'))
             username = form_data.get('username', [''])[0]
             password = form_data.get('password', [''])[0]
             
-            # Check credentials
             if username in USERS and USERS[username]['password'] == password:
-                # Create new session
                 session_id = str(NEXT_SESSION_ID)
                 SERVER_SESSIONS[session_id] = {
                     "user": username,
@@ -143,13 +136,11 @@ class CTFHandler(BaseHTTPRequestHandler):
                     SERVER_SESSIONS[session_id]['flag'] = FLAG
                 NEXT_SESSION_ID += 1
                 
-                # Redirect to dashboard with session cookie
                 self.send_response(302)
                 self.send_header('Set-Cookie', f'session_id={session_id}; Path=/')
                 self.send_header('Location', '/dashboard')
                 self.end_headers()
             else:
-                # Login failed
                 self.send_response(200)
                 self.send_header('Content-type', 'text/html')
                 self.end_headers()
@@ -162,7 +153,6 @@ class CTFHandler(BaseHTTPRequestHandler):
     def log_message(self, format, *args):
         print(f"[SERVER LOG] {format % args}")
 
-# --- HTML TEMPLATES ---
 
 LOGIN_HTML = """
 <!DOCTYPE html>
@@ -172,16 +162,19 @@ LOGIN_HTML = """
     <title>NetCorp - Secure Login</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
-        body { margin: 0; padding: 0; background-color: #050510; color: #e0e0e0; font-family: 'Share Tech Mono', monospace; overflow-x: hidden; height: 100vh; display: flex; justify-content: center; align-items: center; }
+        body { margin: 0; padding: 0; background-color: #050510; color: #e0e0e0; font-family: 'Share Tech Mono', monospace; overflow-x: hidden; min-height: 100vh; display: flex; justify-content: center; align-items: center; }
         #matrix-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; opacity: 0.3; }
-        .login-box { position: relative; z-index: 1; background: rgba(10, 10, 20, 0.95); border: 2px solid #00ffff; box-shadow: 0 0 20px #00ffff; padding: 40px; width: 400px; border-radius: 5px; }
+        .login-box { position: relative; z-index: 1; background: rgba(10, 10, 20, 0.95); border: 2px solid #00ffff; box-shadow: 0 0 20px #00ffff; padding: 40px; width: 400px; border-radius: 5px; margin: 20px; }
         .login-box h1 { color: #00ffff; text-shadow: 0 0 10px #00ffff; text-align: center; margin-bottom: 30px; }
         .input-group { margin-bottom: 20px; }
         .input-group label { display: block; color: #00ffff; margin-bottom: 5px; }
         .input-group input { width: 100%; background: #000; border: 1px solid #00ffff; color: #00ffff; padding: 10px; font-family: 'Share Tech Mono', monospace; font-size: 1rem; outline: none; box-sizing: border-box; }
         .input-group input:focus { box-shadow: 0 0 10px #00ffff; }
-        button { width: 100%; background: #ff00ff; color: #fff; border: none; padding: 12px; font-family: 'Share Tech Mono', monospace; font-size: 1.1rem; cursor: pointer; font-weight: bold; }
-        button:hover { background: #fff; color: #ff00ff; box-shadow: 0 0 15px #ff00ff; }
+        button[type="submit"] { width: 100%; background: #ff00ff; color: #fff; border: none; padding: 12px; font-family: 'Share Tech Mono', monospace; font-size: 1.1rem; cursor: pointer; font-weight: bold; }
+        button[type="submit"]:hover { background: #fff; color: #ff00ff; box-shadow: 0 0 15px #ff00ff; }
+        .hint-btn { width: 100%; background: transparent; color: #00ffff; border: 1px dashed #00ffff; padding: 8px; font-family: 'Share Tech Mono', monospace; margin-top: 15px; cursor: pointer; }
+        .hint-btn:hover { background: rgba(0, 255, 255, 0.1); box-shadow: 0 0 10px #00ffff; }
+        .hint-box { display: none; margin-top: 10px; padding: 10px; background: rgba(255, 0, 255, 0.05); border: 1px solid #ff00ff; color: #ff00ff; font-size: 0.85rem; line-height: 1.4; }
         .hint { margin-top: 20px; padding-top: 20px; border-top: 1px solid #333; font-size: 0.9rem; color: #666; text-align: center; }
     </style>
 </head>
@@ -200,11 +193,25 @@ LOGIN_HTML = """
             </div>
             <button type="submit">AUTHENTICATE</button>
         </form>
+        <button class="hint-btn" onclick="toggleHint()">[?] HINTS</button>
+        <div id="hint-content" class="hint-box">
+            <strong>HINT 1:</strong> Inspect your browser cookies after logging in.<br>
+            <strong>HINT 2:</strong> Session identifiers might be predictable integers.
+        </div>
         <div class="hint">
             <p>Default credentials: guest / guest123</p>
         </div>
     </div>
     <script>
+        function toggleHint() {
+            const box = document.getElementById('hint-content');
+            if (box.style.display === 'block') {
+                box.style.display = 'none';
+            } else {
+                box.style.display = 'block';
+            }
+        }
+
         const canvas = document.getElementById('matrix-bg');
         const ctx = canvas.getContext('2d');
         canvas.width = window.innerWidth;
