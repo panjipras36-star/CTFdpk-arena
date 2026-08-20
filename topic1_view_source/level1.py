@@ -61,7 +61,7 @@ class CTFHandler(BaseHTTPRequestHandler):
                 <p><strong>Your Objective:</strong> Find the hidden flag and submit it below. Format: <code>FLAG{...}</code></p>
             </div>
             <div class="hints-section">
-                <h3 style="color: var(--accent); margin-bottom: 1rem;">💡 Need Help? (Hints)</h3>
+                <h3 style="color: var(--accent); margin-bottom: 1rem;">Need Help? (Hints)</h3>
                 <details><summary>Hint 1</summary><div class="hint-content">The flag is not visible on the rendered page. You need to look at the raw HTML code sent by the server.</div></details>
                 <details><summary>Hint 2</summary><div class="hint-content">Right-click anywhere on the page and select "View Page Source", or press Ctrl+U (Windows/Linux) / Cmd+U (Mac).</div></details>
                 <details><summary>Hint 3</summary><div class="hint-content">Look for HTML comments. They are used to hide text in the source code and look like this: &lt;!-- text --&gt;</div></details>
@@ -83,8 +83,8 @@ class CTFHandler(BaseHTTPRequestHandler):
                 const modal = document.getElementById('result-modal');
                 const content = document.getElementById('modal-content');
                 modal.style.display = 'flex';
-                if (data.success) { content.className = 'modal-content success'; document.getElementById('modal-title').innerText = '🎉 Correct!'; document.getElementById('modal-message').innerText = data.message; }
-                else { content.className = 'modal-content error'; document.getElementById('modal-title').innerText = '❌ Incorrect'; document.getElementById('modal-message').innerText = data.message; }
+                if (data.success) { content.className = 'modal-content success'; document.getElementById('modal-title').innerText = 'Correct!'; document.getElementById('modal-message').innerText = data.message; }
+                else { content.className = 'modal-content error'; document.getElementById('modal-title').innerText = 'Incorrect'; document.getElementById('modal-message').innerText = data.message; }
             } catch (error) { alert('Error submitting flag.'); }
         });
     </script>
@@ -126,5 +126,7 @@ if __name__ == '__main__':
     server_address = ('', 8000)
     httpd = HTTPServer(server_address, CTFHandler)
     print("=" * 50)
-    print("🚀 CTFdpk Arena - Topic 1, Level 1 Started!")
-    print("📍 Open: http://localhost:
+    print("CTFdpk Arena - Topic 1, Level 1 Started!")
+    print("Open: http://localhost:8000")
+    print("=" * 50)
+    httpd.serve_forever()
