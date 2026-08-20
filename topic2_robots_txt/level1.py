@@ -59,7 +59,7 @@ class CTFHandler(BaseHTTPRequestHandler):
     <div class="container">
         <div class="challenge-card">
             <div class="challenge-header">
-                <div><h2 class="challenge-title">Topic 2: Robots.txt - Level 1</h2><div class="challenge-meta">Category: Information Disclosure | Difficulty: Easy</div></div>
+                <div><h2 class="challenge-title">Topic 2: Information Disclosure - Level 1</h2><div class="challenge-meta">Category: Robots.txt | Difficulty: Easy</div></div>
             </div>
             <div class="description">
                 <p>Welcome to Topic 2, agent. In this topic, we will look at how websites communicate with search engines.</p>
@@ -69,7 +69,7 @@ class CTFHandler(BaseHTTPRequestHandler):
             <div class="hints-section">
                 <h3 style="color: var(--accent); margin-bottom: 1rem;">Need Help? (Hints)</h3>
                 <details><summary>Hint 1</summary><div class="hint-content">There is a standard file that lives at the root of almost every website, named after a famous 1990s protocol for excluding robots.</div></details>
-                <details><summary>Hint 2</summary><div class="hint-content">Try navigating to <code>http://localhost:8000/robots.txt</code> in your browser.</div></details>
+                <details><summary>Hint 2</summary><div class="hint-content">Read the file carefully. It contains a <code>Disallow</code> rule pointing to a specific path. Visit that path to find the flag.</div></details>
             </div>
             <div class="submit-section">
                 <input type="text" id="flag-input" placeholder="Enter flag here (e.g., FLAG{...})">
