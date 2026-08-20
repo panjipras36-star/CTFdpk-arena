@@ -3,10 +3,8 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
 import urllib.parse
 
-# FLAG FOR LEVEL 4
 FLAG = "FLAG{3xt3rn4l_4ss3ts_4r3_l34ky}"
 
-# External Assets Content
 CSS_CONTENT = """
 :root {
     --bg-color: #0f172a; --card-bg: #1e293b; --text-main: #f8fafc;
@@ -38,64 +36,40 @@ button:hover { background-color: var(--accent-hover); }
 .modal-content { background: var(--card-bg); padding: 2rem; border-radius: 8px; text-align: center; max-width: 400px; border: 1px solid var(--border); }
 .modal.success { border-top: 4px solid var(--success); }
 .modal.error { border-top: 4px solid var(--danger); }
-
-/* 
-    [INTERNAL MEMO] 
-    To prevent source code clutter, we moved the backup keys to external files.
-    Part 1 of the recovery key: FLAG{3xt3rn4l_4ss3ts
-    Part 2 is encoded in the main application script. Check app.js!
-*/
+/* [INTERNAL MEMO] To prevent source code clutter, we moved the backup keys to external files. Part 1 of the recovery key: FLAG{3xt3rn4l_4ss3ts. Part 2 is encoded in the main application script. Check app.js! */
 """
 
 JS_CONTENT = """
-// Main Application Logic
 document.addEventListener('DOMContentLoaded', () => {
     console.log("System initialized. Waiting for user input...");
-    
-    // Debug variable for legacy support
-    var _0x4a1 = "XzRyM19sMzRreX0="; 
-    
+    var _0x4a1 = "XzRyM19sMzRreX0=";
     const submitBtn = document.getElementById('submit-btn');
     if(submitBtn) {
         submitBtn.addEventListener('click', async () => {
             const flag = document.getElementById('flag-input').value.trim();
             if (!flag) return;
             try {
-                const response = await fetch('/submit', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ flag: flag })
-                });
+                const response = await fetch('/submit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ flag: flag }) });
                 const data = await response.json();
                 const modal = document.getElementById('result-modal');
                 const content = document.getElementById('modal-content');
                 modal.style.display = 'flex';
-                if (data.success) {
-                    content.className = 'modal-content success';
-                    document.getElementById('modal-title').innerText = ' Correct!';
-                    document.getElementById('modal-message').innerText = data.message;
-                } else {
-                    content.className = 'modal-content error';
-                    document.getElementById('modal-title').innerText = '❌ Incorrect';
-                    document.getElementById('modal-message').innerText = data.message;
-                }
+                if (data.success) { content.className = 'modal-content success'; document.getElementById('modal-title').innerText = '🎉 Correct!'; document.getElementById('modal-message').innerText = data.message; }
+                else { content.className = 'modal-content error'; document.getElementById('modal-title').innerText = '❌ Incorrect'; document.getElementById('modal-message').innerText = data.message; }
             } catch (error) { alert('Error submitting flag.'); }
         });
     }
 });
-
 // TODO: Decode _0x4a1 (Base64) and concatenate with CSS memo to get full recovery key.
 """
 
 class CTFHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         parsed_path = urllib.parse.urlparse(self.path)
-        
         if parsed_path.path == '/':
             self.send_response(200)
             self.send_header('Content-type', 'text/html')
             self.end_headers()
-            
             html_content = """
 <!DOCTYPE html>
 <html lang="en">
@@ -106,75 +80,45 @@ class CTFHandler(BaseHTTPRequestHandler):
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <header>
-        <h1>CTFdpk Arena</h1>
-        <div class="user">Logged in as: <strong>Guest</strong></div>
-    </header>
-
+    <header><h1>CTFdpk Arena</h1><div class="user">Logged in as: <strong>Guest</strong></div></header>
     <div class="container">
         <div class="challenge-card">
             <div class="challenge-header">
-                <div>
-                    <h2 class="challenge-title">Topic 1: View Source - Level 4</h2>
-                    <div class="challenge-meta">Category: Web Exploitation | Difficulty: Hard</div>
-                </div>
+                <div><h2 class="challenge-title">Topic 1: View Source - Level 4</h2><div class="challenge-meta">Category: Web Exploitation | Difficulty: Hard</div></div>
             </div>
-
             <div class="description">
                 <p>Level 3 was about scattered pieces. Level 4 is about <strong>architecture</strong>.</p>
                 <p>The developers realized that putting secrets in the main HTML file was bad practice. They refactored the code, moving styles and logic to external files to keep the HTML clean.</p>
                 <p><strong>Your Objective:</strong> The flag is no longer in this HTML file. You need to investigate the external assets the browser is loading. Format: <code>FLAG{...}</code></p>
             </div>
-
             <div class="hints-section">
-                <h3 style="color: var(--accent); margin-bottom: 1rem;"> Need Help? (Hints)</h3>
-                <details>
-                    <summary>Hint 1</summary>
-                    <div class="hint-content">Look at the <code>&lt;head&gt;</code> section of the HTML source code. What external files is the browser instructed to load?</div>
-                </details>
-                <details>
-                    <summary>Hint 2</summary>
-                    <div class="hint-content">Open the <strong>Network Tab</strong> in Developer Tools, refresh the page, and look at the list of requested files (CSS, JS, Images). Click on them to see their content.</div>
-                </details>
-                <details>
-                    <summary>Hint 3</summary>
-                    <div class="hint-content">You will find two parts of the flag. One is in a CSS comment. The other is a Base64 encoded string in the JavaScript file. You need to decode the Base64 string and combine them.</div>
-                </details>
+                <h3 style="color: var(--accent); margin-bottom: 1rem;">💡 Need Help? (Hints)</h3>
+                <details><summary>Hint 1</summary><div class="hint-content">Look at the &lt;head&gt; section of the HTML source code. What external files is the browser instructed to load?</div></details>
+                <details><summary>Hint 2</summary><div class="hint-content">Open the Network Tab in Developer Tools, refresh the page, and look at the list of requested files (CSS, JS, Images). Click on them to see their content.</div></details>
+                <details><summary>Hint 3</summary><div class="hint-content">You will find two parts of the flag. One is in a CSS comment. The other is a Base64 encoded string in the JavaScript file. You need to decode the Base64 string and combine them.</div></details>
             </div>
-
             <div class="submit-section">
                 <input type="text" id="flag-input" placeholder="Enter complete flag here (e.g., FLAG{...})">
                 <button id="submit-btn">Submit Flag</button>
             </div>
         </div>
     </div>
-
-    <div id="result-modal" class="modal">
-        <div id="modal-content" class="modal-content">
-            <h2 id="modal-title"></h2>
-            <p id="modal-message"></p>
-            <button onclick="document.getElementById('result-modal').style.display='none'">Close</button>
-        </div>
-    </div>
-
+    <div id="result-modal" class="modal"><div id="modal-content" class="modal-content"><h2 id="modal-title"></h2><p id="modal-message"></p><button onclick="document.getElementById('result-modal').style.display='none'">Close</button></div></div>
     <script src="/static/app.js"></script>
 </body>
 </html>
 """
             self.wfile.write(html_content.encode())
-            
         elif parsed_path.path == '/static/style.css':
             self.send_response(200)
             self.send_header('Content-type', 'text/css')
             self.end_headers()
             self.wfile.write(CSS_CONTENT.encode())
-            
         elif parsed_path.path == '/static/app.js':
             self.send_response(200)
             self.send_header('Content-type', 'application/javascript')
             self.end_headers()
             self.wfile.write(JS_CONTENT.encode())
-            
         else:
             self.send_response(404)
             self.end_headers()
@@ -208,7 +152,7 @@ if __name__ == '__main__':
     server_address = ('', 8000)
     httpd = HTTPServer(server_address, CTFHandler)
     print("=" * 50)
-    print(" CTFdpk Arena - Topic 1, Level 4 Started!")
+    print("🚀 CTFdpk Arena - Topic 1, Level 4 Started!")
     print(" Open: http://localhost:8000")
     print("=" * 50)
     httpd.serve_forever()
