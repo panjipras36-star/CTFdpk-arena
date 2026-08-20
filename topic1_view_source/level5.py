@@ -3,28 +3,10 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
 import urllib.parse
 
-FLAG = "FLAG{w4f_byp4ss_m4st3r_2024}"
-WAF_ADMIN_TOKEN = "ctf-secret-token-2024"
-
-class WAF:
-    @staticmethod
-    def check_request(handler):
-        if handler.path == '/api/secret':
-            token = handler.headers.get('X-Admin-Token', '')
-            if token != WAF_ADMIN_TOKEN:
-                return False
-        return True
+FLAG = "FLAG{d0m_m4n1pul4t10n_m4st3r}"
 
 class CTFHandler(BaseHTTPRequestHandler):
     def do_GET(self):
-        if not WAF.check_request(self):
-            self.send_response(403)
-            self.send_header('Content-type', 'application/json')
-            self.end_headers()
-            response = {"error": "403 Forbidden", "message": "WAF: Access denied. Invalid or missing authentication token."}
-            self.wfile.write(json.dumps(response).encode())
-            return
-        
         parsed_path = urllib.parse.urlparse(self.path)
         if parsed_path.path == '/':
             self.send_response(200)
@@ -64,7 +46,6 @@ class CTFHandler(BaseHTTPRequestHandler):
         .modal-content { background: var(--card-bg); padding: 2rem; border-radius: 8px; text-align: center; max-width: 400px; border: 1px solid var(--border); }
         .modal.success { border-top: 4px solid var(--success); }
         .modal.error { border-top: 4px solid var(--danger); }
-        .waf-notice { background: rgba(239, 68, 68, 0.1); border-left: 4px solid var(--danger); padding: 1rem; margin: 1rem 0; border-radius: 4px; }
     </style>
 </head>
 <body>
@@ -72,21 +53,19 @@ class CTFHandler(BaseHTTPRequestHandler):
     <div class="container">
         <div class="challenge-card">
             <div class="challenge-header">
-                <div><h2 class="challenge-title">Topic 1: View Source - Level 5</h2><div class="challenge-meta">Category: Web Exploitation | Difficulty: Hard (WAF)</div></div>
+                <div><h2 class="challenge-title">Topic 1: View Source - Level 5</h2><div class="challenge-meta">Category: Web Exploitation | Difficulty: Hard (DOM Manipulation)</div></div>
             </div>
             <div class="description">
-                <p>Congratulations on reaching the final level, agent. This is where things get serious.</p>
-                <p>The developers have deployed a <strong>Web Application Firewall (WAF)</strong> to protect their secret API endpoint at <code>/api/secret</code>. The WAF blocks all unauthorized access attempts.</p>
-                <p>However, the application itself needs to access this endpoint for admin functions. The developers left some debugging code in the JavaScript that reveals how the application authenticates with the WAF.</p>
-                <div class="waf-notice"><strong>⚠️ WAF Notice:</strong> Direct access to <code>/api/secret</code> is protected. You will receive a 403 Forbidden error without proper authentication.</div>
-                <p><strong>Your Objective:</strong> Bypass the WAF and retrieve the flag from <code>/api/secret</code>. Format: <code>FLAG{...}</code></p>
+                <p>Welcome to the final boss of Topic 1, agent. You have learned how to read the source code. Now, it is time to <strong>control</strong> it.</p>
+                <p>The developers built a "Secret Admin Console" to store the flag. They didn't just hide it in the code; they used advanced CSS techniques to make it invisible and unreadable to regular users.</p>
+                <p><strong>Your Objective:</strong> The flag is rendered in the DOM, but you cannot see it. Use your browser's Developer Tools (Inspector) to manipulate the page and reveal the flag. Format: <code>FLAG{...}</code></p>
+                <p style="color: var(--danger);"><em>Hint: You cannot solve this just by reading. You must edit the live page in your browser.</em></p>
             </div>
             <div class="hints-section">
-                <h3 style="color: var(--accent); margin-bottom: 1rem;">💡 Need Help? (Hints)</h3>
-                <details><summary>Hint 1</summary><div class="hint-content">Try accessing <code>/api/secret</code> directly in your browser. You'll see the WAF blocks you with a 403 error.</div></details>
-                <details><summary>Hint 2</summary><div class="hint-content">The application itself can access this endpoint. Inspect the JavaScript source code carefully. Look for any fetch() or AJAX calls.</div></details>
-                <details><summary>Hint 3</summary><div class="hint-content">The WAF checks for a specific HTTP header. Once you find the header name and value in the JavaScript, use browser developer tools (Console tab) or curl.</div></details>
-                <details><summary>Hint 4</summary><div class="hint-content">Example curl command: <code>curl -H "X-Header-Name: value" http://localhost:8000/api/secret</code></div></details>
+                <h3 style="color: var(--accent); margin-bottom: 1rem;">Need Help? (Hints)</h3>
+                <details><summary>Hint 1</summary><div class="hint-content">The Admin Console exists in the HTML, but it has a CSS rule telling the browser not to display it. Open Inspector (F12) and search for "admin".</div></details>
+                <details><summary>Hint 2</summary><div class="hint-content">Find the element with <code>style="display: none;"</code>. In the Styles pane on the right, uncheck or delete the <code>display: none</code> property to make it visible.</div></details>
+                <details><summary>Hint 3</summary><div class="hint-content">Even after revealing the panel, the flag text looks blurry! Look at the inline style of the flag text element. Remove the <code>filter: blur(...)</code> property to read it clearly.</div></details>
             </div>
             <div class="submit-section">
                 <input type="text" id="flag-input" placeholder="Enter flag here (e.g., FLAG{...})">
@@ -94,16 +73,17 @@ class CTFHandler(BaseHTTPRequestHandler):
             </div>
         </div>
     </div>
+
+    <!-- THE HIDDEN ADMIN CONSOLE -->
+    <div id="admin-console" style="display: none; background: #000; color: #0f0; padding: 20px; margin: 20px auto; max-width: 800px; font-family: monospace; border: 1px solid #0f0; border-radius: 8px;">
+        <h3 style="color: #0f0; margin-top: 0;">[ ROOT ACCESS GRANTED ]</h3>
+        <p>System Status: ONLINE</p>
+        <p>Authorized Personnel Only.</p>
+        <p>System Flag: <span id="flag-text" style="filter: blur(8px); user-select: none;">FLAG{d0m_m4n1pul4t10n_m4st3r}</span></p>
+    </div>
+
     <div id="result-modal" class="modal"><div id="modal-content" class="modal-content"><h2 id="modal-title"></h2><p id="modal-message"></p><button onclick="document.getElementById('result-modal').style.display='none'">Close</button></div></div>
     <script>
-        console.log("CTFdpk Arena initialized");
-        (function() {
-            const adminConfig = {
-                endpoint: '/api/secret',
-                authToken: 'ctf-secret-token-2024',
-                headers: { 'X-Admin-Token': 'ctf-secret-token-2024' }
-            };
-        })();
         document.getElementById('submit-btn').addEventListener('click', async () => {
             const flag = document.getElementById('flag-input').value.trim();
             if (!flag) return;
@@ -113,8 +93,8 @@ class CTFHandler(BaseHTTPRequestHandler):
                 const modal = document.getElementById('result-modal');
                 const content = document.getElementById('modal-content');
                 modal.style.display = 'flex';
-                if (data.success) { content.className = 'modal-content success'; document.getElementById('modal-title').innerText = '🎉 Correct!'; document.getElementById('modal-message').innerText = data.message; }
-                else { content.className = 'modal-content error'; document.getElementById('modal-title').innerText = '❌ Incorrect'; document.getElementById('modal-message').innerText = data.message; }
+                if (data.success) { content.className = 'modal-content success'; document.getElementById('modal-title').innerText = 'Correct!'; document.getElementById('modal-message').innerText = data.message; }
+                else { content.className = 'modal-content error'; document.getElementById('modal-title').innerText = 'Incorrect'; document.getElementById('modal-message').innerText = data.message; }
             } catch (error) { alert('Error submitting flag.'); }
         });
     </script>
@@ -122,17 +102,9 @@ class CTFHandler(BaseHTTPRequestHandler):
 </html>
 """
             self.wfile.write(html_content.encode())
-        elif parsed_path.path == '/api/secret':
-            self.send_response(200)
-            self.send_header('Content-type', 'application/json')
-            self.end_headers()
-            response = {"status": "success", "message": "Admin access granted", "flag": FLAG}
-            self.wfile.write(json.dumps(response).encode())
         else:
             self.send_response(404)
-            self.send_header('Content-type', 'application/json')
             self.end_headers()
-            self.wfile.write(json.dumps({"error": "404 Not Found"}).encode())
 
     def do_POST(self):
         if self.path == '/submit':
@@ -142,9 +114,9 @@ class CTFHandler(BaseHTTPRequestHandler):
                 data = json.loads(post_data)
                 submitted_flag = data.get('flag', '')
                 if submitted_flag == FLAG:
-                    response = {"success": True, "message": "Level 5 Cleared! You are a WAF bypass master. Topic 1 Complete!"}
+                    response = {"success": True, "message": "Level 5 Cleared! You are a DOM manipulation master. Topic 1 Complete!"}
                 else:
-                    response = {"success": False, "message": "Incorrect flag."}
+                    response = {"success": False, "message": "Incorrect flag. Did you reveal and unblur the admin console?"}
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
@@ -163,7 +135,7 @@ if __name__ == '__main__':
     server_address = ('', 8000)
     httpd = HTTPServer(server_address, CTFHandler)
     print("=" * 50)
-    print("🛡️ CTFdpk Arena - Topic 1, Level 5 (WAF) Started!")
-    print("📍 Open: http://localhost:8000")
+    print("CTFdpk Arena - Topic 1, Level 5 (DOM) Started!")
+    print("Open: http://localhost:8000")
     print("=" * 50)
     httpd.serve_forever()
