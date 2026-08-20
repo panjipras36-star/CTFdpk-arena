@@ -8,12 +8,21 @@ FLAG = "FLAG{cyb3r_c00k13_m4st3r}"
 class CTFHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         parsed_path = urllib.parse.urlparse(self.path)
-        
+       
+        if parsed_path.path == '/logout':
+            self.send_response(302) 
+            self.send_header('Set-Cookie', 'role=; Path=/; Max-Age=0')
+            self.send_header('Location', '/')
+            self.end_headers()
+            return
+
         if parsed_path.path == '/':
+           
             cookie_header = self.headers.get('Cookie', '')
             cookie = SimpleCookie()
             cookie.load(cookie_header)
             
+           
             is_admin = False
             if 'role' in cookie:
                 if cookie['role'].value == 'admin':
@@ -22,10 +31,12 @@ class CTFHandler(BaseHTTPRequestHandler):
             self.send_response(200)
             self.send_header('Content-type', 'text/html')
             
+            
             if 'role' not in cookie:
-                self.send_header('Set-Cookie', 'role=guest; Path=/; HttpOnly')
+                self.send_header('Set-Cookie', 'role=guest; Path=/')
             self.end_headers()
             
+           
             html_content = f"""
 <!DOCTYPE html>
 <html lang="en">
@@ -36,152 +47,50 @@ class CTFHandler(BaseHTTPRequestHandler):
         @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
         
         body {{
-            margin: 0;
-            padding: 0;
-            background-color: #050510;
-            color: #e0e0e0;
-            font-family: 'Share Tech Mono', monospace;
-            overflow-x: hidden;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            margin: 0; padding: 0; background-color: #050510; color: #e0e0e0;
+            font-family: 'Share Tech Mono', monospace; overflow-x: hidden;
+            height: 100vh; display: flex; justify-content: center; align-items: center;
         }}
-
-        /* Binary Rain Background */
-        #matrix-bg {{
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 0;
-            opacity: 0.3;
-        }}
-
-        /* Main Dashboard Panel */
+        #matrix-bg {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; opacity: 0.3; }}
         .dashboard {{
-            position: relative;
-            z-index: 1;
-            background: rgba(10, 10, 20, 0.95);
-            border: 2px solid #00ffff;
-            box-shadow: 0 0 20px #00ffff, inset 0 0 20px rgba(0, 255, 255, 0.2);
-            padding: 30px;
-            width: 800px;
-            max-width: 90%;
-            border-radius: 5px;
+            position: relative; z-index: 1; background: rgba(10, 10, 20, 0.95);
+            border: 2px solid #00ffff; box-shadow: 0 0 20px #00ffff, inset 0 0 20px rgba(0, 255, 255, 0.2);
+            padding: 30px; width: 800px; max-width: 90%; border-radius: 5px;
         }}
-
         .header {{
-            border-bottom: 2px solid #ff00ff;
-            padding-bottom: 15px;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            border-bottom: 2px solid #ff00ff; padding-bottom: 15px; margin-bottom: 20px;
+            display: flex; justify-content: space-between; align-items: center;
         }}
-
-        .header h1 {{
-            margin: 0;
-            color: #00ffff;
-            text-shadow: 0 0 10px #00ffff;
-            font-size: 1.8rem;
-        }}
-
+        .header h1 {{ margin: 0; color: #00ffff; text-shadow: 0 0 10px #00ffff; font-size: 1.8rem; }}
         .status-badge {{
-            background: #ff00ff;
-            color: #000;
-            padding: 5px 15px;
-            font-weight: bold;
-            border-radius: 3px;
-            box-shadow: 0 0 10px #ff00ff;
+            background: #ff00ff; color: #000; padding: 5px 15px; font-weight: bold;
+            border-radius: 3px; box-shadow: 0 0 10px #ff00ff;
         }}
-
-        .status-badge.admin {{
-            background: #00ff00;
-            box-shadow: 0 0 10px #00ff00;
-        }}
-
-        .content {{
-            font-size: 1.1rem;
-            line-height: 1.6;
-            margin-bottom: 20px;
-        }}
-
+        .status-badge.admin {{ background: #00ff00; box-shadow: 0 0 10px #00ff00; }}
+        .content {{ font-size: 1.1rem; line-height: 1.6; margin-bottom: 20px; }}
         .highlight {{ color: #00ffff; font-weight: bold; }}
         .danger {{ color: #ff3333; font-weight: bold; text-shadow: 0 0 5px #ff3333; }}
-
         .flag-container {{
-            background: rgba(0, 255, 255, 0.1);
-            border: 1px dashed #00ffff;
-            padding: 20px;
-            margin: 20px 0;
-            text-align: center;
+            background: rgba(0, 255, 255, 0.1); border: 1px dashed #00ffff;
+            padding: 20px; margin: 20px 0; text-align: center;
             display: {'block' if is_admin else 'none'};
         }}
-
-        .flag-text {{
-            font-size: 1.5rem;
-            color: #ffff00;
-            text-shadow: 0 0 10px #ffff00;
-            margin: 10px 0;
-        }}
-
-        .input-group {{
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }}
-
+        .flag-text {{ font-size: 1.5rem; color: #ffff00; text-shadow: 0 0 10px #ffff00; margin: 10px 0; }}
+        .input-group {{ display: flex; gap: 10px; margin-top: 20px; }}
         input[type="text"] {{
-            flex: 1;
-            background: #000;
-            border: 1px solid #00ffff;
-            color: #00ffff;
-            padding: 10px;
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 1.1rem;
-            outline: none;
+            flex: 1; background: #000; border: 1px solid #00ffff; color: #00ffff;
+            padding: 10px; font-family: 'Share Tech Mono', monospace; font-size: 1.1rem; outline: none;
         }}
-
-        input[type="text"]:focus {{
-            box-shadow: 0 0 10px #00ffff;
-        }}
-
-        button {{
-            background: #ff00ff;
-            color: #fff;
-            border: none;
-            padding: 10px 20px;
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 1.1rem;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s;
-        }}
-
-        button:hover {{
-            background: #fff;
-            color: #ff00ff;
-            box-shadow: 0 0 15px #ff00ff;
-        }}
-
-        details {{
-            margin-top: 20px;
-            border-top: 1px solid #333;
-            padding-top: 10px;
-        }}
-
-        summary {{
-            color: #00ffff;
-            cursor: pointer;
-            font-size: 1.1rem;
-        }}
-
+        input[type="text"]:focus {{ box-shadow: 0 0 10px #00ffff; }}
+        .btn {{ color: #fff; border: none; padding: 10px 20px; font-family: 'Share Tech Mono', monospace; font-size: 1.1rem; cursor: pointer; font-weight: bold; transition: all 0.3s; }}
+        .btn-submit {{ background: #ff00ff; }}
+        .btn-submit:hover {{ background: #fff; color: #ff00ff; box-shadow: 0 0 15px #ff00ff; }}
+        .btn-reset {{ background: #333; border: 1px solid #ff3333; color: #ff3333; margin-left: 10px; }}
+        .btn-reset:hover {{ background: #ff3333; color: #000; box-shadow: 0 0 15px #ff3333; }}
+        details {{ margin-top: 20px; border-top: 1px solid #333; padding-top: 10px; }}
+        summary {{ color: #00ffff; cursor: pointer; font-size: 1.1rem; }}
         summary:hover {{ text-shadow: 0 0 5px #00ffff; }}
-
-        .hint-text {{
-            color: #aaa;
-            margin-top: 10px;
-            font-size: 1rem;
-        }}
+        .hint-text {{ color: #aaa; margin-top: 10px; font-size: 1rem; }}
     </style>
 </head>
 <body>
@@ -210,7 +119,8 @@ class CTFHandler(BaseHTTPRequestHandler):
 
         <div class="input-group">
             <input type="text" id="flag-input" placeholder="ENTER FLAG TO VERIFY...">
-            <button id="submit-btn">TRANSMIT</button>
+            <button class="btn btn-submit" id="submit-btn">TRANSMIT</button>
+            <button class="btn btn-reset" id="logout-btn">RESET SESSION</button>
         </div>
 
         <details>
@@ -243,7 +153,6 @@ class CTFHandler(BaseHTTPRequestHandler):
 
             for (let i = 0; i < drops.length; i++) {{
                 const text = chars.charAt(Math.floor(Math.random() * chars.length));
-                // Hanya gambar di sisi kiri dan kanan (20% masing-masing)
                 if (i < columns * 0.2 || i > columns * 0.8) {{
                     ctx.fillText(text, i * fontSize, drops[i] * fontSize);
                 }}
@@ -270,6 +179,13 @@ class CTFHandler(BaseHTTPRequestHandler):
                     alert('[!] TRANSMISSION FAILED: ' + data.message);
                 }}
             }} catch (error) {{ alert('[!] SYSTEM ERROR'); }}
+        }});
+
+        // Logic untuk Reset Session
+        document.getElementById('logout-btn').addEventListener('click', () => {{
+            if(confirm('Are you sure you want to clear your session and restart the challenge?')) {{
+                window.location.href = '/logout';
+            }}
         }});
     </script>
 </body>
@@ -309,7 +225,7 @@ if __name__ == '__main__':
     server_address = ('', 8000)
     httpd = HTTPServer(server_address, CTFHandler)
     print("=" * 50)
-    print("CTFdpk Arena - Topic 3, Level 1 (Cyberpunk) Started!")
+    print("CTFdpk Arena - Topic 3, Level 1 (Cyberpunk + Reset) Started!")
     print("Open: http://localhost:8000")
     print("=" * 50)
     httpd.serve_forever()
