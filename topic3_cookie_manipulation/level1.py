@@ -1,8 +1,10 @@
+#!/usr/bin/env python3
 from http.server import HTTPServer, BaseHTTPRequestHandler
+from http.cookies import SimpleCookie
 import json
 import urllib.parse
 
-FLAG = "FLAG{c00k13_m0nst3r_b4s1cs}"
+FLAG = "FLAG{cyb3r_c00k13_m4st3r}"
 
 class CTFHandler(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -10,15 +12,21 @@ class CTFHandler(BaseHTTPRequestHandler):
         
         if parsed_path.path == '/':
             cookie_header = self.headers.get('Cookie', '')
-            is_admin = 'role=admin' in cookie_header
+            cookie = SimpleCookie()
+            cookie.load(cookie_header)
+            
+            is_admin = False
+            if 'role' in cookie:
+                if cookie['role'].value == 'admin':
+                    is_admin = True
             
             self.send_response(200)
             self.send_header('Content-type', 'text/html')
-          
-            if 'role=' not in cookie_header:
-                self.send_header('Set-Cookie', 'role=guest; Path=/')
+            
+            if 'role' not in cookie:
+                self.send_header('Set-Cookie', 'role=guest; Path=/; HttpOnly')
             self.end_headers()
-        
+            
             html_content = f"""
 <!DOCTYPE html>
 <html lang="en">
@@ -26,156 +34,241 @@ class CTFHandler(BaseHTTPRequestHandler):
     <meta charset="UTF-8">
     <title>CTFdpk Arena - Topic 3: Level 1</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
         
         body {{
-            background-color: #050505;
-            color: #00ff41;
-            font-family: 'VT323', 'Courier New', monospace;
-            font-size: 1.2rem;
             margin: 0;
-            padding: 20px;
+            padding: 0;
+            background-color: #050510;
+            color: #e0e0e0;
+            font-family: 'Share Tech Mono', monospace;
             overflow-x: hidden;
-            text-shadow: 0 0 5px #00ff41;
-        }}
-        
-        /* Efek Scanlines TV Tabung */
-        body::before {{
-            content: " ";
-            display: block;
-            position: absolute;
-            top: 0; left: 0; bottom: 0; right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            z-index: 2;
-            background-size: 100% 2px, 3px 100%;
-            pointer-events: none;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }}
 
-        .terminal-window {{
-            border: 2px solid #00ff41;
-            border-radius: 10px;
-            padding: 20px;
-            max-width: 900px;
-            margin: 0 auto;
-            box-shadow: 0 0 20px rgba(0, 255, 65, 0.2);
+        /* Binary Rain Background */
+        #matrix-bg {{
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0;
+            opacity: 0.3;
+        }}
+
+        /* Main Dashboard Panel */
+        .dashboard {{
             position: relative;
             z-index: 1;
+            background: rgba(10, 10, 20, 0.95);
+            border: 2px solid #00ffff;
+            box-shadow: 0 0 20px #00ffff, inset 0 0 20px rgba(0, 255, 255, 0.2);
+            padding: 30px;
+            width: 800px;
+            max-width: 90%;
+            border-radius: 5px;
         }}
 
-        .header-bar {{
-            border-bottom: 1px dashed #00ff41;
-            padding-bottom: 10px;
+        .header {{
+            border-bottom: 2px solid #ff00ff;
+            padding-bottom: 15px;
             margin-bottom: 20px;
             display: flex;
             justify-content: space-between;
+            align-items: center;
         }}
 
-        .status {{ color: #ff3333; text-shadow: 0 0 5px #ff3333; }}
-        .status.granted {{ color: #00ff41; }}
-        
-        .prompt {{ margin-bottom: 10px; }}
-        .cursor {{ animation: blink 1s step-end infinite; }}
-        
-        @keyframes blink {{ 50% {{ opacity: 0; }} }}
+        .header h1 {{
+            margin: 0;
+            color: #00ffff;
+            text-shadow: 0 0 10px #00ffff;
+            font-size: 1.8rem;
+        }}
 
-        .flag-box {{
-            border: 1px solid #00ff41;
-            padding: 15px;
-            margin-top: 20px;
-            background: rgba(0, 255, 65, 0.1);
+        .status-badge {{
+            background: #ff00ff;
+            color: #000;
+            padding: 5px 15px;
+            font-weight: bold;
+            border-radius: 3px;
+            box-shadow: 0 0 10px #ff00ff;
+        }}
+
+        .status-badge.admin {{
+            background: #00ff00;
+            box-shadow: 0 0 10px #00ff00;
+        }}
+
+        .content {{
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }}
+
+        .highlight {{ color: #00ffff; font-weight: bold; }}
+        .danger {{ color: #ff3333; font-weight: bold; text-shadow: 0 0 5px #ff3333; }}
+
+        .flag-container {{
+            background: rgba(0, 255, 255, 0.1);
+            border: 1px dashed #00ffff;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
             display: {'block' if is_admin else 'none'};
         }}
 
-        .access-denied {{
-            color: #ff3333;
-            text-shadow: 0 0 5px #ff3333;
+        .flag-text {{
+            font-size: 1.5rem;
+            color: #ffff00;
+            text-shadow: 0 0 10px #ffff00;
+            margin: 10px 0;
+        }}
+
+        .input-group {{
+            display: flex;
+            gap: 10px;
             margin-top: 20px;
-            display: {'none' if is_admin else 'block'};
         }}
 
         input[type="text"] {{
+            flex: 1;
             background: #000;
-            border: 1px solid #00ff41;
-            color: #00ff41;
-            font-family: 'VT323', monospace;
-            font-size: 1.2rem;
+            border: 1px solid #00ffff;
+            color: #00ffff;
             padding: 10px;
-            width: 70%;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1.1rem;
             outline: none;
         }}
-        
+
+        input[type="text"]:focus {{
+            box-shadow: 0 0 10px #00ffff;
+        }}
+
         button {{
-            background: #00ff41;
-            color: #000;
+            background: #ff00ff;
+            color: #fff;
             border: none;
-            font-family: 'VT323', monospace;
-            font-size: 1.2rem;
             padding: 10px 20px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1.1rem;
             cursor: pointer;
             font-weight: bold;
+            transition: all 0.3s;
         }}
-        button:hover {{ background: #fff; }}
 
-        details {{ margin-top: 20px; border: 1px dashed #005500; padding: 10px; }}
-        summary {{ cursor: pointer; color: #00aa00; }}
-        summary:hover {{ color: #00ff41; }}
-        .hint-content {{ color: #00aa00; margin-top: 10px; }}
+        button:hover {{
+            background: #fff;
+            color: #ff00ff;
+            box-shadow: 0 0 15px #ff00ff;
+        }}
+
+        details {{
+            margin-top: 20px;
+            border-top: 1px solid #333;
+            padding-top: 10px;
+        }}
+
+        summary {{
+            color: #00ffff;
+            cursor: pointer;
+            font-size: 1.1rem;
+        }}
+
+        summary:hover {{ text-shadow: 0 0 5px #00ffff; }}
+
+        .hint-text {{
+            color: #aaa;
+            margin-top: 10px;
+            font-size: 1rem;
+        }}
     </style>
 </head>
 <body>
-    <div class="terminal-window">
-        <div class="header-bar">
-            <span>ROOT@CTFDPK-SERVER:~# ./access_control.sh</span>
-            <span>TOPIC 3: LEVEL 1</span>
-        </div>
+    <canvas id="matrix-bg"></canvas>
 
-        <div class="prompt">
-            > Initializing secure connection...<br>
-            > Loading user profile...<br>
-            > Current User Role: <strong>{'ADMINISTRATOR' if is_admin else 'GUEST'}</strong><br>
-            > Clearance Level: <span class="{'granted' if is_admin else 'status'}">{'MAXIMUM' if is_admin else 'DENIED'}</span>
-        </div>
-
-        <div class="access-denied">
-            [!] ERROR: Access Denied. You do not have sufficient privileges to view the classified flag.<br>
-            [!] The system identifies users via a small data packet stored locally in your browser.<br>
-            [!] Hint: Inspect your browser's storage mechanisms.
-        </div>
-
-        <div class="flag-box">
-            [+] ACCESS GRANTED. WELCOME, ADMINISTRATOR.<br>
-            [+] CLASSIFIED FLAG DECRYPTED:<br><br>
-            <h2 style="margin:0;">{FLAG}</h2>
-        </div>
-
-        <div style="margin-top: 30px; border-top: 1px dashed #00ff41; padding-top: 20px;">
-            <div class="prompt">> SUBMIT FLAG TO VERIFY:<span class="cursor">_</span></div>
-            <div style="margin-top: 10px;">
-                <input type="text" id="flag-input" placeholder="FLAG{{...}}">
-                <button id="submit-btn">EXECUTE</button>
+    <div class="dashboard">
+        <div class="header">
+            <h1>NETRUNNER ACCESS TERMINAL</h1>
+            <div class="status-badge {'admin' if is_admin else ''}">
+                {'AUTHORIZED' if is_admin else 'GUEST ACCESS'}
             </div>
         </div>
 
+        <div class="content">
+            <p>> SYSTEM STATUS: <span class="highlight">ONLINE</span></p>
+            <p>> USER IDENTIFICATION: <span class="highlight">{cookie['role'].value if 'role' in cookie else 'UNKNOWN'}</span></p>
+            <p>> CLEARANCE LEVEL: <span class="{'highlight' if is_admin else 'danger'}">{'OMEGA' if is_admin else 'RESTRICTED'}</span></p>
+            
+            {'<p>> ACCESSING CLASSIFIED DATABASE...</p>' if is_admin else '<p class="danger">> ERROR: INSUFFICIENT PRIVILEGES. FLAG ENCRYPTED.</p>'}
+        </div>
+
+        <div class="flag-container">
+            <p>> DECRYPTION SUCCESSFUL. FLAG EXTRACTED:</p>
+            <div class="flag-text">{FLAG}</div>
+        </div>
+
+        <div class="input-group">
+            <input type="text" id="flag-input" placeholder="ENTER FLAG TO VERIFY...">
+            <button id="submit-btn">TRANSMIT</button>
+        </div>
+
         <details>
-            <summary>[?] DECRYPT HINT PROTOCOL (Click to expand)</summary>
-            <div class="hint-content">
-                > HINT 1: Websites use small text files to remember user state. These are not stored in the HTML source code.<br>
-                > HINT 2: Open Developer Tools (F12). Look for a tab named "Application" or "Storage". Find the domain "localhost:8000".
+            <summary>[?] DECRYPT HINT PROTOCOL</summary>
+            <div class="hint-text">
+                > HINT 1: The server identifies you using a small data packet stored in your browser's memory.<br>
+                > HINT 2: Open Developer Tools (F12). Navigate to the 'Application' or 'Storage' tab. Inspect the Cookies for this domain.
             </div>
         </details>
     </div>
 
     <script>
+        // Binary Rain Effect (Cyberpunk Style)
+        const canvas = document.getElementById('matrix-bg');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const chars = '01';
+        const fontSize = 14;
+        const columns = canvas.width / fontSize;
+        const drops = [];
+        for (let i = 0; i < columns; i++) drops[i] = 1;
+
+        function drawMatrix() {{
+            ctx.fillStyle = 'rgba(5, 5, 16, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#00ffff';
+            ctx.font = fontSize + 'px monospace';
+
+            for (let i = 0; i < drops.length; i++) {{
+                const text = chars.charAt(Math.floor(Math.random() * chars.length));
+                // Hanya gambar di sisi kiri dan kanan (20% masing-masing)
+                if (i < columns * 0.2 || i > columns * 0.8) {{
+                    ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                }}
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+                drops[i]++;
+            }}
+        }}
+        setInterval(drawMatrix, 50);
+
+        // Submit Logic
         document.getElementById('submit-btn').addEventListener('click', async () => {{
             const flag = document.getElementById('flag-input').value.trim();
             if (!flag) return;
             try {{
-                const response = await fetch('/submit', {{ method: 'POST', headers: {{ 'Content-Type': 'application/json' }}, body: JSON.stringify({{ flag: flag }}) }});
+                const response = await fetch('/submit', {{ 
+                    method: 'POST', 
+                    headers: {{ 'Content-Type': 'application/json' }}, 
+                    body: JSON.stringify({{ flag: flag }}) 
+                }});
                 const data = await response.json();
                 if (data.success) {{
-                    alert('[+] SUCCESS: Flag verified. Level Cleared!');
+                    alert('[+] TRANSMISSION SUCCESSFUL. FLAG VERIFIED.');
                 }} else {{
-                    alert('[!] ERROR: ' + data.message);
+                    alert('[!] TRANSMISSION FAILED: ' + data.message);
                 }}
             }} catch (error) {{ alert('[!] SYSTEM ERROR'); }}
         }});
@@ -217,7 +310,7 @@ if __name__ == '__main__':
     server_address = ('', 8000)
     httpd = HTTPServer(server_address, CTFHandler)
     print("=" * 50)
-    print("CTFdpk Arena - Topic 3, Level 1 (Retro Terminal) Started!")
+    print("CTFdpk Arena - Topic 3, Level 1 (Cyberpunk) Started!")
     print("Open: http://localhost:8000")
     print("=" * 50)
     httpd.serve_forever()
