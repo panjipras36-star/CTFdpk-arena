@@ -26,12 +26,10 @@ class CTFHandler(BaseHTTPRequestHandler):
             return
         
         parsed_path = urllib.parse.urlparse(self.path)
-        
         if parsed_path.path == '/':
             self.send_response(200)
             self.send_header('Content-type', 'text/html')
             self.end_headers()
-            
             html_content = """
 <!DOCTYPE html>
 <html lang="en">
@@ -86,8 +84,8 @@ class CTFHandler(BaseHTTPRequestHandler):
             <div class="hints-section">
                 <h3 style="color: var(--accent); margin-bottom: 1rem;">💡 Need Help? (Hints)</h3>
                 <details><summary>Hint 1</summary><div class="hint-content">Try accessing <code>/api/secret</code> directly in your browser. You'll see the WAF blocks you with a 403 error.</div></details>
-                <details><summary>Hint 2</summary><div class="hint-content">The application itself can access this endpoint. Inspect the JavaScript source code carefully. Look for any <code>fetch()</code> or AJAX calls.</div></details>
-                <details><summary>Hint 3</summary><div class="hint-content">The WAF checks for a specific HTTP header. Once you find the header name and value in the JavaScript, use browser developer tools (Console tab) or <code>curl</code>.</div></details>
+                <details><summary>Hint 2</summary><div class="hint-content">The application itself can access this endpoint. Inspect the JavaScript source code carefully. Look for any fetch() or AJAX calls.</div></details>
+                <details><summary>Hint 3</summary><div class="hint-content">The WAF checks for a specific HTTP header. Once you find the header name and value in the JavaScript, use browser developer tools (Console tab) or curl.</div></details>
                 <details><summary>Hint 4</summary><div class="hint-content">Example curl command: <code>curl -H "X-Header-Name: value" http://localhost:8000/api/secret</code></div></details>
             </div>
             <div class="submit-section">
@@ -115,7 +113,7 @@ class CTFHandler(BaseHTTPRequestHandler):
                 const modal = document.getElementById('result-modal');
                 const content = document.getElementById('modal-content');
                 modal.style.display = 'flex';
-                if (data.success) { content.className = 'modal-content success'; document.getElementById('modal-title').innerText = '🎉 Correct!'; document.getElementById('modal-message').innerText = data.message; } 
+                if (data.success) { content.className = 'modal-content success'; document.getElementById('modal-title').innerText = '🎉 Correct!'; document.getElementById('modal-message').innerText = data.message; }
                 else { content.className = 'modal-content error'; document.getElementById('modal-title').innerText = '❌ Incorrect'; document.getElementById('modal-message').innerText = data.message; }
             } catch (error) { alert('Error submitting flag.'); }
         });
@@ -124,7 +122,6 @@ class CTFHandler(BaseHTTPRequestHandler):
 </html>
 """
             self.wfile.write(html_content.encode())
-            
         elif parsed_path.path == '/api/secret':
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
@@ -166,7 +163,7 @@ if __name__ == '__main__':
     server_address = ('', 8000)
     httpd = HTTPServer(server_address, CTFHandler)
     print("=" * 50)
-    print("🛡️  CTFdpk Arena - Topic 1, Level 5 (WAF) Started!")
+    print("🛡️ CTFdpk Arena - Topic 1, Level 5 (WAF) Started!")
+    print("📍 Open: http://localhost:8000")
     print("=" * 50)
     httpd.serve_forever()
-
