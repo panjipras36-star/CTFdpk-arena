@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from http.cookies import SimpleCookie
 import json
