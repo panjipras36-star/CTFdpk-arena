@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
 import urllib.parse
